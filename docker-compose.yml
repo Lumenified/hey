@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: 'webapp'
+      MYSQL_USER: 'webapp'
+      MYSQL_PASSWORD: 'webapp'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    networks:
+      - lamp-docker
+
+  laravel:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - "./:/var/www/html"
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - lamp-docker
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/public
+    command: >
+      bash -c "composer install && apache2-foreground"
+
+  phpmyadmin:
+    depends_on:
+      - db
+    image: "phpmyadmin/phpmyadmin"
+    ports:
+      - 8001:80
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+    networks:
+      - lamp-docker
+
+networks:
+  lamp-docker:
+    driver: bridge
